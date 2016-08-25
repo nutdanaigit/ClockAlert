@@ -2,7 +2,7 @@ package ayp.aug.alarmclock;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.icu.text.SimpleDateFormat;
+
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -19,8 +19,10 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by Nutdanai on 8/24/2016.
@@ -73,6 +75,7 @@ public class ClockListFragment extends Fragment {
 
             mTitleText.setText(mClock.getTitle());
             mTimeAlertText.setText(setFormatTime(mClock.getTime()));
+            Log.d(TAG, "ere " + setFormatTime(mClock.getTime()));
             aSwitch.setChecked(mClock.isCheck());
 
             aSwitch.setOnClickListener(this);
@@ -81,10 +84,12 @@ public class ClockListFragment extends Fragment {
 
         public String setFormatTime(Date date) {
             Log.d(TAG, "setFormatTime: " + date);
-            SimpleDateFormat formatDate = new SimpleDateFormat("hh : mm a");
-            Log.d(TAG, "setFormatTimeChange : " + formatDate.format(date).toString());
+            SimpleDateFormat formatDate = new SimpleDateFormat("hh:mm a");
+//            Log.d(TAG, "setFormatTimeChange : " + formatDate.format(date).toString());
 //            formatDate.setTimeZone(TimeZone.getTimeZone("GMT+07:00"));
-            return formatDate.format(date).toString();
+            Log.d(TAG, "setFormatTime :  " + formatDate.format(date));
+            String ss = formatDate.format(date);
+            return ss;
         }
 
 
@@ -139,7 +144,7 @@ public class ClockListFragment extends Fragment {
                 if(mClock == null){
                     mClock = new Clock();
                 }
-                ClockDialogFragment clockDialogFragment = ClockDialogFragment.newInstance(mClock.getTime());
+                ClockDialogFragment clockDialogFragment = ClockDialogFragment.newInstance(mClock.getUuid());
                 clockDialogFragment.setTargetFragment(ClockListFragment.this, REQUEST_CODE_DIALOG);
                 clockDialogFragment.show(fm, REQUEST_STRING_DIALOG);
                 return true;

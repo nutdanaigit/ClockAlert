@@ -45,14 +45,17 @@ public class ClockService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         //
         NotificationCompat.Builder builder =new NotificationCompat.Builder(this);
-        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
         builder.setTicker("Ticker!");
         builder.setContentTitle("Time Up !!");
         builder.setContentText("Hello!!");
-        builder.setAutoCancel(true);
+        builder.setSmallIcon(android.R.drawable.ic_notification_overlay);
+        builder.setAutoCancel(false);
         builder.setSound(soundUri);
+        builder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
 
         Notification notification = builder.build();
+        notification.flags |= Notification.FLAG_INSISTENT;
         NotificationManagerCompat nmc = NotificationManagerCompat.from(this);
         nmc.notify(0,notification);
     }

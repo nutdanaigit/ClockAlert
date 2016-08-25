@@ -16,6 +16,7 @@ import android.widget.TimePicker;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * Created by Nutdanai on 8/24/2016.
@@ -30,9 +31,9 @@ public class ClockDialogFragment extends DialogFragment {
 
     private static final int REQUEST_CODE =77;
 
-    public static ClockDialogFragment newInstance(Date date) {
+    public static ClockDialogFragment newInstance(UUID uuid) {
         Bundle args = new Bundle();
-        args.putSerializable("ARG_TIME",date);
+        args.putSerializable("ARG_TIME",uuid);
         ClockDialogFragment fragment = new ClockDialogFragment();
         fragment.setArguments(args);
         return fragment;
@@ -45,10 +46,11 @@ public class ClockDialogFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         View v = LayoutInflater.from(getActivity()).inflate(R.layout.clock_layout_set,null);
-        Date date = (Date) getArguments().getSerializable("ARG_TIME");
+        mClockLab = ClockLab.getInstance(getActivity());
+        UUID uuid = (UUID) getArguments().getSerializable("ARG_TIME");
+        mClock = mClockLab.getClockById(uuid);
 
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
         int hour = calendar.get(Calendar.HOUR);
         int minute = calendar.get(Calendar.MINUTE);
 
@@ -56,10 +58,11 @@ public class ClockDialogFragment extends DialogFragment {
         mEditText = (EditText) v.findViewById(R.id.title_name_editTxt);
         mTimePicker = (TimePicker) v.findViewById(R.id.timePicker);
         aSwitch = (Switch) v.findViewById(R.id.switch_check);
-        mTimePicker.setHour(hour);
-        mTimePicker.setMinute(minute);
-
-        mClockLab = ClockLab.getInstance(getActivity());
+        if(mClock != null) {
+            calendar.setTime(mClock.getTime());
+            mTimePicker.setHour(hour);
+            mTimePicker.setMinute(minute);
+        }
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setView(v);
         builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
@@ -74,6 +77,7 @@ public class ClockDialogFragment extends DialogFragment {
                 int minute = mTimePicker.getMinute();
                 calendar.set(Calendar.HOUR_OF_DAY,hour);
                 calendar.set(Calendar.MINUTE,minute);
+                calendar.set(Calendar.SECOND,0);
 //                calendar.set(Calendar.AM_PM,);
 
 
@@ -85,7 +89,7 @@ public class ClockDialogFragment extends DialogFragment {
                 Log.d(TAG,"Dialog Minute onClick : " +minute);
 
                 mClockLab.addList(mClock);
-//                ClockService.setServiceAlarm(getActivity(),mClock,mClock.isCheck());
+                ClockService.setServiceAlarm(getActivity(),mClock,mClock.isCheck());
                 getTargetFragment().onActivityResult(REQUEST_CODE, Activity.RESULT_OK,intent);
             }
         });
