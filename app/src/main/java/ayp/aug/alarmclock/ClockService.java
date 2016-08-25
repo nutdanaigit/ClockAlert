@@ -50,7 +50,7 @@ public class ClockService extends IntentService {
         builder.setContentTitle("Time Up !!");
         builder.setContentText("Hello!!");
         builder.setSmallIcon(android.R.drawable.ic_notification_overlay);
-        builder.setAutoCancel(false);
+        builder.setAutoCancel(true);
         builder.setSound(soundUri);
         builder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
 
