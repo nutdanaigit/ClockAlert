@@ -12,6 +12,14 @@ public class Clock {
     public String title;
     public Date time;
     public boolean check;
+    public static Clock instanceClock;
+
+    public static Clock newInstanceClock(){
+        if(instanceClock == null){
+            instanceClock = new Clock();
+        }
+        return instanceClock;
+    }
 
     public Clock(){
         this(UUID.randomUUID());

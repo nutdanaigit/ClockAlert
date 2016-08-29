@@ -1,11 +1,13 @@
 package ayp.aug.alarmclock;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -18,11 +20,9 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by Nutdanai on 8/24/2016.
@@ -30,7 +30,6 @@ import java.util.Locale;
 public class ClockListFragment extends Fragment {
     RecyclerView mRecyclerView;
     ClockAdapter mClockAdapter;
-    Clock mClock;
     private static final String TAG = "ClockListFragment";
     private static final String REQUEST_STRING_DIALOG = "requestTag_string_to_dialog";
     private static final int REQUEST_CODE_DIALOG = 77;
@@ -52,8 +51,9 @@ public class ClockListFragment extends Fragment {
         return v;
     }
 
-    class ClockHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        private Clock mClock;
+    class ClockHolder extends RecyclerView.ViewHolder implements View.OnClickListener,View.OnLongClickListener {
+        protected Clock mClock;
+        private ClockLab mClockLab;
         private int mPosition;
         private TextView mTitleText;
         private TextView mTimeAlertText;
@@ -62,10 +62,13 @@ public class ClockListFragment extends Fragment {
 
         public ClockHolder(View itemView) {
             super(itemView);
+            mClock = Clock.newInstanceClock();
             mTitleText = (TextView) itemView.findViewById(R.id.txt_title_name);
             mTimeAlertText = (TextView) itemView.findViewById(R.id.txt_show_timeAlert);
             aSwitch = (Switch) itemView.findViewById(R.id.switch_check);
             mLinearLayout = (LinearLayout) itemView.findViewById(R.id.list_item_for_holder);
+            mClockLab = ClockLab.getInstance(getActivity());
+
 
         }
 
@@ -74,22 +77,13 @@ public class ClockListFragment extends Fragment {
             mPosition = position;
 
             mTitleText.setText(mClock.getTitle());
-            mTimeAlertText.setText(setFormatTime(mClock.getTime()));
-            Log.d(TAG, "ere " + setFormatTime(mClock.getTime()));
+            mTimeAlertText.setText(mClockLab.setFormatTime(mClock.getTime()));
+            Log.d(TAG, "Show new Format Time : " + mClockLab.setFormatTime(mClock.getTime()));
             aSwitch.setChecked(mClock.isCheck());
 
-            aSwitch.setOnClickListener(this);
+            mLinearLayout.setOnLongClickListener(this);
             mLinearLayout.setOnClickListener(this);
-        }
-
-        public String setFormatTime(Date date) {
-            Log.d(TAG, "setFormatTime: " + date);
-            SimpleDateFormat formatDate = new SimpleDateFormat("hh:mm a");
-//            Log.d(TAG, "setFormatTimeChange : " + formatDate.format(date).toString());
-//            formatDate.setTimeZone(TimeZone.getTimeZone("GMT+07:00"));
-            Log.d(TAG, "setFormatTime :  " + formatDate.format(date));
-            String ss = formatDate.format(date);
-            return ss;
+            aSwitch.setOnClickListener(this);
         }
 
 
@@ -102,6 +96,11 @@ public class ClockListFragment extends Fragment {
                     Log.d(TAG, "Status Switch " + mPosition + " :" + aSwitch.isChecked());
                     return;
                 case R.id.list_item_for_holder:
+                    Log.d(TAG,"Come to edit list");
+                    FragmentManager fm = getActivity().getSupportFragmentManager();
+                    ClockDialogFragment clockDialogFragment = ClockDialogFragment.newInstance(mClock.getUuid());
+                    clockDialogFragment.setTargetFragment(ClockListFragment.this, REQUEST_CODE_DIALOG);
+                    clockDialogFragment.show(fm, REQUEST_STRING_DIALOG);
                     Log.d(TAG, "Position : " + mPosition);
                     return;
                 default:
@@ -109,7 +108,29 @@ public class ClockListFragment extends Fragment {
                     return;
             }
         }
+
+        @Override
+        public boolean onLongClick(View view) {
+            Log.d(TAG,"! On long Click !");
+            new AlertDialog.Builder(getActivity())
+                    .setTitle("Do you want to delete list?")
+                    .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                           ClockLab.getInstance(getActivity()).delete(mPosition);
+                            Log.d(TAG,"Size : "+ClockLab.getInstance(getActivity()).getClock().size());
+                            updateUI();
+                        }
+                    })
+                    .setNegativeButton("Cancel",null)
+                    .show().create();
+            return true;
+        }
     }
+
+    /**
+     * ClockAdapter Class
+     */
 
     class ClockAdapter extends RecyclerView.Adapter<ClockHolder> {
         private List<Clock> _clock;
@@ -141,10 +162,8 @@ public class ClockListFragment extends Fragment {
         switch (item.getItemId()) {
             case R.id.mnu_plus_time:
                 FragmentManager fm = getActivity().getSupportFragmentManager();
-                if(mClock == null){
-                    mClock = new Clock();
-                }
-                ClockDialogFragment clockDialogFragment = ClockDialogFragment.newInstance(mClock.getUuid());
+
+                ClockDialogFragment clockDialogFragment = ClockDialogFragment.newInstance(Clock.newInstanceClock().getUuid());
                 clockDialogFragment.setTargetFragment(ClockListFragment.this, REQUEST_CODE_DIALOG);
                 clockDialogFragment.show(fm, REQUEST_STRING_DIALOG);
                 return true;
@@ -175,6 +194,7 @@ public class ClockListFragment extends Fragment {
         if (mClockAdapter == null) {
             mClockAdapter = new ClockAdapter(mClockLists);
             mRecyclerView.setAdapter(mClockAdapter);
+            Toast.makeText(getActivity(),"คุณตั้งเวลาไว้ : " + Clock.newInstanceClock().getTime(),Toast.LENGTH_LONG).show();
         } else {
             mClockAdapter.notifyDataSetChanged();
         }
